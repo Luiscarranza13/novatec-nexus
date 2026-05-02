@@ -6,13 +6,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-const items = [
+const items: { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }[] = [
   { to: "/admin", label: "Resumen", icon: LayoutDashboard, exact: true },
   { to: "/admin/proyectos", label: "Proyectos", icon: FolderKanban },
   { to: "/admin/servicios", label: "Servicios", icon: Wrench },
   { to: "/admin/mensajes", label: "Mensajes", icon: Mail },
   { to: "/admin/perfil", label: "Perfil", icon: UserCircle },
-] as const;
+];
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, loading } = useAuth();

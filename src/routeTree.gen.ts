@@ -14,6 +14,8 @@ import { Route as ServiciosRouteImport } from './routes/servicios'
 import { Route as ProyectosRouteImport } from './routes/proyectos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const SobreMiRoute = SobreMiRouteImport.update({
   id: '/sobre-mi',
@@ -40,6 +42,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/proyectos': typeof ProyectosRoute
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/proyectos': typeof ProyectosRoute
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +78,37 @@ export interface FileRoutesById {
   '/proyectos': typeof ProyectosRoute
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/contacto' | '/proyectos' | '/servicios' | '/sobre-mi'
+  fullPaths:
+    | '/'
+    | '/contacto'
+    | '/proyectos'
+    | '/servicios'
+    | '/sobre-mi'
+    | '/admin/login'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contacto' | '/proyectos' | '/servicios' | '/sobre-mi'
-  id: '__root__' | '/' | '/contacto' | '/proyectos' | '/servicios' | '/sobre-mi'
+  to:
+    | '/'
+    | '/contacto'
+    | '/proyectos'
+    | '/servicios'
+    | '/sobre-mi'
+    | '/admin/login'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/contacto'
+    | '/proyectos'
+    | '/servicios'
+    | '/sobre-mi'
+    | '/admin/login'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +117,8 @@ export interface RootRouteChildren {
   ProyectosRoute: typeof ProyectosRoute
   ServiciosRoute: typeof ServiciosRoute
   SobreMiRoute: typeof SobreMiRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +158,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +181,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProyectosRoute: ProyectosRoute,
   ServiciosRoute: ServiciosRoute,
   SobreMiRoute: SobreMiRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
