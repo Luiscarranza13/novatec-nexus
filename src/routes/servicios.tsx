@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as Icons from "lucide-react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, type LucideIcon } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,7 +38,7 @@ function Servicios() {
 
         <div className="grid md:grid-cols-2 gap-5">
           {items.map((s) => {
-            const Icon = (Icons as Record<string, React.FC<{ className?: string }>>)[s.icono] ?? Sparkles;
+            const Icon = ((Icons as unknown as Record<string, LucideIcon>)[s.icono] ?? Sparkles) as LucideIcon;
             return (
               <div key={s.id} className="glass rounded-3xl p-7 hover:border-violet/60 transition-all">
                 <div className="flex items-start gap-4">

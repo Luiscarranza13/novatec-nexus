@@ -5,6 +5,8 @@ import { PublicLayout } from "@/components/site/PublicLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE } from "@/lib/site";
 import * as Icons from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import avatarLuis from "@/assets/avatar-luis.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -78,7 +80,7 @@ function Index() {
             <div className="absolute -inset-8 bg-gradient-to-tr from-neon/30 via-violet/30 to-transparent blur-3xl rounded-full" />
             <div className="relative aspect-square max-w-md mx-auto rounded-3xl overflow-hidden glass p-2">
               <img
-                src="/src/assets/avatar-luis.jpg"
+                src={avatarLuis}
                 alt="Luis Armando Carranza Cortez"
                 className="w-full h-full object-cover rounded-2xl"
                 width={768}
@@ -101,7 +103,7 @@ function Index() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {servicios.map((s) => {
-            const Icon = (Icons as Record<string, React.FC<{ className?: string }>>)[s.icono] ?? Sparkles;
+            const Icon = ((Icons as unknown as Record<string, LucideIcon>)[s.icono] ?? Sparkles) as LucideIcon;
             return (
               <div
                 key={s.id}
