@@ -1,27 +1,38 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
-import { Menu, X, Sparkles } from "lucide-react";
+import { useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
+import novatecLogo from "@/assets/novatec-logo.png";
+import { useGsapNavbar } from "@/hooks/useGsapAnimations";
 
 const links = [
   { to: "/", label: "Inicio" },
-  { to: "/sobre-mi", label: "Sobre mí" },
+  { to: "/sobre-mi", label: "Sobre mi" },
   { to: "/servicios", label: "Servicios" },
   { to: "/proyectos", label: "Proyectos" },
   { to: "/contacto", label: "Contacto" },
 ] as const;
 
 export function Navbar() {
+  const headerRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const { location } = useRouterState();
+  useGsapNavbar(headerRef);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50">
+    <header ref={headerRef} className="fixed top-0 inset-x-0 z-50 will-change-transform">
       <div className="mx-auto max-w-6xl px-4 pt-4">
-        <nav className="glass rounded-2xl px-4 py-3 flex items-center justify-between">
+        <nav className="glass premium-border flex items-center justify-between rounded-2xl px-4 py-3">
           <Link to="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
-            <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-neon to-violet shadow-neon">
-              <Sparkles className="h-5 w-5 text-background" />
+            <span className="relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-neon ring-1 ring-glass-border">
+              <img
+                src={novatecLogo}
+                alt="Logo Novatec"
+                className="h-full w-full object-cover"
+                width={40}
+                height={40}
+              />
             </span>
             <span className="font-display font-semibold tracking-tight">
               <span className="text-gradient">Novatec</span>
@@ -36,9 +47,9 @@ export function Navbar() {
                   <Link
                     to={l.to}
                     className={cn(
-                      "px-3 py-2 text-sm rounded-lg transition-colors",
+                      "rounded-lg px-3 py-2 text-sm transition-colors",
                       active
-                        ? "text-foreground bg-white/5"
+                        ? "bg-foreground text-background shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-white/5",
                     )}
                   >
@@ -49,19 +60,25 @@ export function Navbar() {
             })}
           </ul>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             <Link
               to="/admin"
-              className="text-xs text-muted-foreground hover:text-neon transition-colors"
+              data-gsap-button
+              className="rounded-full border border-glass-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Admin
             </Link>
           </div>
 
+          <div className="md:hidden ml-auto mr-2">
+            <ThemeToggle />
+          </div>
+
           <button
             className="md:hidden p-2 rounded-lg hover:bg-white/5"
             onClick={() => setOpen((v) => !v)}
-            aria-label="Menú"
+            aria-label="Menu"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

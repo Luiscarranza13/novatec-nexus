@@ -15,21 +15,44 @@ export const Route = createFileRoute("/admin/proyectos")({
 });
 
 type Proyecto = {
-  id: string; nombre: string; descripcion: string;
-  imagen_url: string | null; link: string | null;
-  categoria: string; destacado: boolean; orden: number;
+  id: string;
+  nombre: string;
+  descripcion: string;
+  imagen_url: string | null;
+  link: string | null;
+  categoria: string;
+  destacado: boolean;
+  orden: number;
 };
 
 const empty: Omit<Proyecto, "id"> = {
-  nombre: "", descripcion: "", imagen_url: "",
-  link: "", categoria: "Web", destacado: false, orden: 0,
+  nombre: "",
+  descripcion: "",
+  imagen_url: "",
+  link: "",
+  categoria: "Web",
+  destacado: false,
+  orden: 0,
 };
+
+function normalizeUrl(value: string | null) {
+  const url = value?.trim();
+  if (!url || url === "#") return "";
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
 
 function ProyectosAdmin() {
   const [items, setItems] = useState<Proyecto[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Proyecto | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -38,58 +61,96 @@ function ProyectosAdmin() {
     if (error) toast.error(error.message);
     else setItems((data as Proyecto[]) ?? []);
   }
-  useEffect(() => { load(); }, []);
 
-  async function remove(id: string) {
-    if (!confirm("¿Eliminar este proyecto?")) return;
-    const { error } = await supabase.from("proyectos").delete().eq("id", id);
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function remove(project: Proyecto) {
+    if (!confirm(`Eliminar el proyecto "${project.nombre}"?`)) return;
+    setDeletingId(project.id);
+    const { error } = await supabase.from("proyectos").delete().eq("id", project.id);
+    setDeletingId(null);
     if (error) toast.error(error.message);
-    else { toast.success("Eliminado"); load(); }
+    else {
+      toast.success("Proyecto eliminado");
+      await load();
+    }
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Proyectos</h1>
-          <p className="text-muted-foreground">Gestiona tu portafolio público.</p>
+      <div className="mb-6 rounded-3xl surface-panel premium-border p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Portafolio</p>
+            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Proyectos</h1>
+            <p className="text-muted-foreground">Gestiona el portafolio publico de la web.</p>
+          </div>
+          <button
+            onClick={() => setCreating(true)}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-neon to-violet px-4 py-2.5 font-medium text-background shadow-neon sm:w-auto"
+          >
+            <Plus className="h-4 w-4" /> Nuevo
+          </button>
         </div>
-        <button
-          onClick={() => setCreating(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium glow-neon"
-        >
-          <Plus className="h-4 w-4" /> Nuevo
-        </button>
       </div>
 
       {loading ? (
-        <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-neon" /></div>
+        <div className="grid place-items-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-neon" />
+        </div>
       ) : items.length === 0 ? (
-        <div className="glass rounded-2xl p-10 text-center text-muted-foreground">Aún no hay proyectos.</div>
+        <div className="surface-panel rounded-2xl p-10 text-center text-muted-foreground">
+          Aun no hay proyectos.
+        </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
           {items.map((p) => (
-            <div key={p.id} className="glass rounded-2xl overflow-hidden">
+            <article key={p.id} className="surface-panel overflow-hidden rounded-2xl">
               <div className="aspect-[16/10] bg-gradient-to-br from-violet/30 to-neon/20">
-                {p.imagen_url && <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" loading="lazy" />}
+                {p.imagen_url ? (
+                  <img
+                    src={p.imagen_url}
+                    alt={p.nombre}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="h-full grid place-items-center text-muted-foreground text-sm">
+                    Sin imagen
+                  </div>
+                )}
               </div>
               <div className="p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-neon uppercase tracking-wider">{p.categoria}</span>
                   {p.destacado && <Star className="h-4 w-4 text-neon fill-neon" />}
                 </div>
                 <h3 className="font-semibold mt-1">{p.nombre}</h3>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.descripcion}</p>
-                <div className="flex gap-2 mt-3">
-                  <button onClick={() => setEditing(p)} className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg glass hover:border-neon">
+                <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                  <button
+                    onClick={() => setEditing(p)}
+                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg glass hover:border-neon"
+                  >
                     <Pencil className="h-3 w-3" /> Editar
                   </button>
-                  <button onClick={() => remove(p.id)} className="px-3 py-2 text-xs rounded-lg glass hover:border-destructive hover:text-destructive">
-                    <Trash2 className="h-3 w-3" />
+                  <button
+                    onClick={() => remove(p)}
+                    disabled={deletingId === p.id}
+                    className="px-3 py-2 text-xs rounded-lg glass hover:border-destructive hover:text-destructive disabled:opacity-60"
+                    aria-label={`Eliminar ${p.nombre}`}
+                  >
+                    {deletingId === p.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3" />
+                    )}
                   </button>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}
@@ -98,8 +159,15 @@ function ProyectosAdmin() {
         <ProyectoModal
           initial={editing ?? { ...empty, id: "" }}
           isNew={creating}
-          onClose={() => { setCreating(false); setEditing(null); }}
-          onSaved={() => { setCreating(false); setEditing(null); load(); }}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            void load();
+          }}
         />
       )}
     </div>
@@ -107,21 +175,44 @@ function ProyectosAdmin() {
 }
 
 function ProyectoModal({
-  initial, isNew, onClose, onSaved,
-}: { initial: Proyecto; isNew: boolean; onClose: () => void; onSaved: () => void }) {
+  initial,
+  isNew,
+  onClose,
+  onSaved,
+}: {
+  initial: Proyecto;
+  isNew: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadImage(file: File) {
-    if (file.size > 5 * 1024 * 1024) { toast.error("Máximo 5MB"); return; }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecciona una imagen valida");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Maximo 5MB");
+      return;
+    }
     setUploading(true);
-    const ext = file.name.split(".").pop();
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `proyectos/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("portafolio").upload(path, file, { upsert: false });
-    if (error) { setUploading(false); toast.error(error.message); return; }
-    const { data: { publicUrl } } = supabase.storage.from("portafolio").getPublicUrl(path);
+    const { error } = await supabase.storage
+      .from("portafolio")
+      .upload(path, file, { upsert: false, contentType: file.type });
+    if (error) {
+      setUploading(false);
+      toast.error(error.message);
+      return;
+    }
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("portafolio").getPublicUrl(path);
     setForm((f) => ({ ...f, imagen_url: publicUrl }));
     setUploading(false);
     toast.success("Imagen subida");
@@ -129,70 +220,181 @@ function ProyectoModal({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.nombre.trim()) { toast.error("Nombre requerido"); return; }
+
+    const nombre = form.nombre.trim();
+    const descripcion = form.descripcion.trim();
+    const categoria = form.categoria.trim();
+    const link = normalizeUrl(form.link);
+    const imageUrl = normalizeUrl(form.imagen_url);
+    const orden = Number.isFinite(form.orden) ? form.orden : 0;
+
+    if (nombre.length < 2) {
+      toast.error("El nombre debe tener al menos 2 caracteres");
+      return;
+    }
+    if (descripcion.length < 10) {
+      toast.error("La descripcion debe tener al menos 10 caracteres");
+      return;
+    }
+    if (categoria.length < 2) {
+      toast.error("La categoria es requerida");
+      return;
+    }
+    if (link === null) {
+      toast.error("El link debe ser una URL http o https");
+      return;
+    }
+    if (imageUrl === null) {
+      toast.error("La imagen debe ser una URL http o https");
+      return;
+    }
+
     setSaving(true);
     const payload = {
-      nombre: form.nombre, descripcion: form.descripcion,
-      imagen_url: form.imagen_url, link: form.link,
-      categoria: form.categoria, destacado: form.destacado, orden: form.orden,
+      nombre,
+      descripcion,
+      imagen_url: imageUrl || "",
+      link: link || "",
+      categoria,
+      destacado: form.destacado,
+      orden,
     };
     const { error } = isNew
       ? await supabase.from("proyectos").insert(payload)
       : await supabase.from("proyectos").update(payload).eq("id", form.id);
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success(isNew ? "Creado" : "Actualizado"); onSaved(); }
+    else {
+      toast.success(isNew ? "Proyecto creado" : "Proyecto actualizado");
+      onSaved();
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center p-4 bg-background/70 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 grid place-items-end bg-background/70 p-3 backdrop-blur-sm sm:place-items-center sm:p-4"
+      onClick={() => !saving && onClose()}
+    >
       <form
         onSubmit={save}
         onClick={(e) => e.stopPropagation()}
-        className="glass rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-auto space-y-3"
+        className="surface-panel max-h-[92vh] w-full max-w-lg overflow-auto rounded-3xl p-4 space-y-3 sm:max-h-[90vh] sm:p-6"
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold">{isNew ? "Nuevo proyecto" : "Editar proyecto"}</h2>
-          <button type="button" onClick={onClose} className="p-1 rounded-lg hover:bg-white/5"><X className="h-4 w-4" /></button>
+          <h2 className="font-display text-xl font-semibold">
+            {isNew ? "Nuevo proyecto" : "Editar proyecto"}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="p-1 rounded-lg hover:bg-white/5"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        <Field label="Nombre">
-          <input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} className={inputCls} />
+        <Field label="Nombre" help="Visible como titulo del proyecto.">
+          <input
+            value={form.nombre}
+            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+            className={inputCls}
+            maxLength={120}
+            required
+          />
         </Field>
-        <Field label="Descripción">
-          <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} rows={3} className={inputCls + " resize-none"} />
+        <Field label="Descripcion" help="Minimo 10 caracteres.">
+          <textarea
+            value={form.descripcion}
+            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+            rows={4}
+            className={inputCls + " resize-none"}
+            maxLength={1000}
+            required
+          />
         </Field>
 
-        <Field label="Imagen">
-          <div className="flex gap-2 items-center">
-            {form.imagen_url && <img src={form.imagen_url} alt="" className="h-14 w-14 rounded-lg object-cover" />}
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass hover:border-neon text-sm">
-              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
-              {uploading ? "Subiendo..." : "Subir imagen"}
-            </button>
+        <Field label="Imagen" help="Puedes subir una imagen o pegar una URL.">
+          <div className="space-y-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {form.imagen_url && (
+                <img src={form.imagen_url} alt="" className="h-14 w-14 rounded-lg object-cover" />
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl glass px-3 py-2 text-sm hover:border-neon"
+              >
+                {uploading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Upload className="h-3 w-3" />
+                )}
+                {uploading ? "Subiendo..." : "Subir imagen"}
+              </button>
+            </div>
+            <input
+              value={form.imagen_url ?? ""}
+              onChange={(e) => setForm({ ...form, imagen_url: e.target.value })}
+              className={inputCls}
+              placeholder="https://..."
+            />
           </div>
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Categoría">
-            <input value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })} className={inputCls} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Categoria">
+            <input
+              value={form.categoria}
+              onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+              className={inputCls}
+              maxLength={60}
+              required
+            />
           </Field>
           <Field label="Orden">
-            <input type="number" value={form.orden} onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })} className={inputCls} />
+            <input
+              type="number"
+              value={form.orden}
+              onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
+              className={inputCls}
+              min={0}
+            />
           </Field>
         </div>
 
-        <Field label="Link (URL)">
-          <input value={form.link ?? ""} onChange={(e) => setForm({ ...form, link: e.target.value })} className={inputCls} placeholder="https://..." />
+        <Field label="Link del proyecto" help="Opcional. Debe iniciar con http o https.">
+          <input
+            value={form.link ?? ""}
+            onChange={(e) => setForm({ ...form, link: e.target.value })}
+            className={inputCls}
+            placeholder="https://..."
+          />
         </Field>
 
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.destacado} onChange={(e) => setForm({ ...form, destacado: e.target.checked })} className="accent-neon" />
+          <input
+            type="checkbox"
+            checked={form.destacado}
+            onChange={(e) => setForm({ ...form, destacado: e.target.checked })}
+            className="accent-neon"
+          />
           Destacado
         </label>
 
-        <button type="submit" disabled={saving} className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon">
+        <button
+          type="submit"
+          disabled={saving || uploading}
+          className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon"
+        >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Guardar
         </button>
@@ -201,13 +403,23 @@ function ProyectoModal({
   );
 }
 
-const inputCls = "w-full px-3 py-2 rounded-lg bg-input border border-glass-border focus:border-neon focus:outline-none text-sm";
+const inputCls =
+  "w-full px-3 py-2 rounded-lg bg-input border border-glass-border focus:border-neon focus:outline-none text-sm";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="text-xs text-muted-foreground">{label}</span>
       <div className="mt-1">{children}</div>
+      {help && <span className="mt-1 block text-[11px] text-muted-foreground">{help}</span>}
     </label>
   );
 }

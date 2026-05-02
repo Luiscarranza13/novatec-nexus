@@ -2,8 +2,12 @@ import { Instagram, Facebook, Linkedin, Github, Globe } from "lucide-react";
 import { SITE } from "@/lib/site";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import novatecLogo from "@/assets/novatec-logo.png";
+import { ADMIN_PROFILE_FILTER, pickPublicProfile } from "@/lib/profile";
 
 type Perfil = {
+  avatar_url: string | null;
+  nombre: string | null;
   instagram: string | null;
   facebook: string | null;
   linkedin: string | null;
@@ -16,10 +20,11 @@ export function Footer() {
   useEffect(() => {
     supabase
       .from("perfiles")
-      .select("instagram,facebook,linkedin,github")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setP(data as Perfil | null));
+      .select("nombre,avatar_url,instagram,facebook,linkedin,github")
+      .eq(ADMIN_PROFILE_FILTER.column, ADMIN_PROFILE_FILTER.value)
+      .order("actualizado_en", { ascending: false })
+      .limit(10)
+      .then(({ data }) => setP(pickPublicProfile(data as Perfil[] | null)));
   }, []);
 
   const socials = [
@@ -33,9 +38,18 @@ export function Footer() {
     <footer className="mt-32 border-t border-glass-border">
       <div className="mx-auto max-w-6xl px-6 py-12 grid gap-8 md:grid-cols-3">
         <div>
-          <h3 className="font-display text-lg">
-            <span className="text-gradient">Novatec</span>
-          </h3>
+          <div className="flex items-center gap-3">
+            <img
+              src={novatecLogo}
+              alt="Logo Novatec"
+              className="h-11 w-11 rounded-xl object-cover bg-white ring-1 ring-glass-border"
+              width={44}
+              height={44}
+            />
+            <h3 className="font-display text-lg">
+              <span className="text-gradient">Novatec</span>
+            </h3>
+          </div>
           <p className="text-sm text-muted-foreground mt-2 max-w-xs">
             Construyendo el futuro digital con sistemas inteligentes, modernos y escalables.
           </p>
@@ -55,7 +69,7 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="text-sm text-muted-foreground">Síguenos</p>
+          <p className="text-sm text-muted-foreground">Siguenos</p>
           <div className="flex gap-2 mt-2">
             {socials.map((s) => (
               <a
@@ -75,7 +89,7 @@ export function Footer() {
       <div className="border-t border-glass-border">
         <div className="mx-auto max-w-6xl px-6 py-4 text-xs text-muted-foreground flex flex-col md:flex-row justify-between gap-2">
           <span>© {new Date().getFullYear()} Novatec. Todos los derechos reservados.</span>
-          <span>Hecho con ❤ por {SITE.nombre}</span>
+          <span>Hecho por {SITE.nombre}</span>
         </div>
       </div>
     </footer>
