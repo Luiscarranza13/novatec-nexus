@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 
@@ -29,11 +30,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Luis Carranza · Full Stack & CEO de Novatec" },
+      { name: "description", content: "Portafolio de Luis Armando Carranza Cortez. Desarrollador Full Stack, CEO de Novatec. Sistemas web inteligentes, apps móviles y diseño UI/UX." },
+      { name: "author", content: "Luis Armando Carranza Cortez" },
+      { property: "og:title", content: "Luis Carranza · Full Stack & CEO de Novatec" },
+      { property: "og:description", content: "Sistemas web inteligentes, apps móviles y diseño UI/UX por Novatec." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -58,6 +59,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster position="top-right" theme="dark" richColors closeButton />
         <Scripts />
       </body>
     </html>
