@@ -15,6 +15,10 @@ import { Route as ProyectosRouteImport } from './routes/proyectos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminServiciosRouteImport } from './routes/admin.servicios'
+import { Route as AdminProyectosRouteImport } from './routes/admin.proyectos'
+import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
+import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const SobreMiRoute = SobreMiRouteImport.update({
@@ -47,6 +51,26 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminServiciosRoute = AdminServiciosRouteImport.update({
+  id: '/admin/servicios',
+  path: '/admin/servicios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProyectosRoute = AdminProyectosRouteImport.update({
+  id: '/admin/proyectos',
+  path: '/admin/proyectos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPerfilRoute = AdminPerfilRouteImport.update({
+  id: '/admin/perfil',
+  path: '/admin/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMensajesRoute = AdminMensajesRouteImport.update({
+  id: '/admin/mensajes',
+  path: '/admin/mensajes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -60,6 +84,10 @@ export interface FileRoutesByFullPath {
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/proyectos': typeof AdminProyectosRoute
+  '/admin/servicios': typeof AdminServiciosRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +97,10 @@ export interface FileRoutesByTo {
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/proyectos': typeof AdminProyectosRoute
+  '/admin/servicios': typeof AdminServiciosRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -79,6 +111,10 @@ export interface FileRoutesById {
   '/servicios': typeof ServiciosRoute
   '/sobre-mi': typeof SobreMiRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/mensajes': typeof AdminMensajesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/proyectos': typeof AdminProyectosRoute
+  '/admin/servicios': typeof AdminServiciosRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +126,10 @@ export interface FileRouteTypes {
     | '/servicios'
     | '/sobre-mi'
     | '/admin/login'
+    | '/admin/mensajes'
+    | '/admin/perfil'
+    | '/admin/proyectos'
+    | '/admin/servicios'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +139,10 @@ export interface FileRouteTypes {
     | '/servicios'
     | '/sobre-mi'
     | '/admin/login'
+    | '/admin/mensajes'
+    | '/admin/perfil'
+    | '/admin/proyectos'
+    | '/admin/servicios'
     | '/admin'
   id:
     | '__root__'
@@ -108,6 +152,10 @@ export interface FileRouteTypes {
     | '/servicios'
     | '/sobre-mi'
     | '/admin/login'
+    | '/admin/mensajes'
+    | '/admin/perfil'
+    | '/admin/proyectos'
+    | '/admin/servicios'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +166,10 @@ export interface RootRouteChildren {
   ServiciosRoute: typeof ServiciosRoute
   SobreMiRoute: typeof SobreMiRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminMensajesRoute: typeof AdminMensajesRoute
+  AdminPerfilRoute: typeof AdminPerfilRoute
+  AdminProyectosRoute: typeof AdminProyectosRoute
+  AdminServiciosRoute: typeof AdminServiciosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -165,6 +217,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/servicios': {
+      id: '/admin/servicios'
+      path: '/admin/servicios'
+      fullPath: '/admin/servicios'
+      preLoaderRoute: typeof AdminServiciosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/proyectos': {
+      id: '/admin/proyectos'
+      path: '/admin/proyectos'
+      fullPath: '/admin/proyectos'
+      preLoaderRoute: typeof AdminProyectosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/perfil': {
+      id: '/admin/perfil'
+      path: '/admin/perfil'
+      fullPath: '/admin/perfil'
+      preLoaderRoute: typeof AdminPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/mensajes': {
+      id: '/admin/mensajes'
+      path: '/admin/mensajes'
+      fullPath: '/admin/mensajes'
+      preLoaderRoute: typeof AdminMensajesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -182,6 +262,10 @@ const rootRouteChildren: RootRouteChildren = {
   ServiciosRoute: ServiciosRoute,
   SobreMiRoute: SobreMiRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminMensajesRoute: AdminMensajesRoute,
+  AdminPerfilRoute: AdminPerfilRoute,
+  AdminProyectosRoute: AdminProyectosRoute,
+  AdminServiciosRoute: AdminServiciosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
