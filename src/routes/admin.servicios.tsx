@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, X, Loader2, Sparkles } from "lucide-react";
-import * as Icons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { AdminLoader } from "@/components/admin/AdminLoader";
 import { supabase } from "@/integrations/supabase/client";
+import { getServiceIcon, isServiceIconName, SERVICE_ICON_NAMES } from "@/lib/service-icons";
 
 export const Route = createFileRoute("/admin/servicios")({
   head: () => ({ meta: [{ title: "Servicios · Admin" }, { name: "robots", content: "noindex" }] }),
@@ -19,11 +19,7 @@ export const Route = createFileRoute("/admin/servicios")({
 type Servicio = { id: string; titulo: string; descripcion: string; icono: string; orden: number };
 const empty: Omit<Servicio, "id"> = { titulo: "", descripcion: "", icono: "Sparkles", orden: 0 };
 
-const suggestedIcons = ["Sparkles", "Code2", "Brain", "Smartphone", "Globe", "Database"];
-
-function getIcon(name: string) {
-  return ((Icons as unknown as Record<string, LucideIcon>)[name] ?? Sparkles) as LucideIcon;
-}
+const suggestedIcons = SERVICE_ICON_NAMES.slice(0, 8);
 
 function ServiciosAdmin() {
   const [items, setItems] = useState<Servicio[]>([]);
@@ -75,17 +71,15 @@ function ServiciosAdmin() {
       </div>
 
       {loading ? (
-        <div className="grid place-items-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-neon" />
-        </div>
+        <AdminLoader label="Cargando servicios..." />
       ) : items.length === 0 ? (
         <div className="surface-panel rounded-2xl p-10 text-center text-muted-foreground">
-          Aun no hay servicios.
+          Aún no hay servicios.
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:gap-4">
           {items.map((s) => {
-            const Icon = getIcon(s.icono);
+            const Icon = getServiceIcon(s.icono);
             return (
               <article key={s.id} className="surface-panel rounded-2xl p-5">
                 <div className="flex items-start gap-3">
@@ -160,7 +154,8 @@ function Modal({
 }) {
   const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
-  const IconPreview = useMemo(() => getIcon(form.icono), [form.icono]);
+  const IconPreview = useMemo(() => getServiceIcon(form.icono), [form.icono]);
+  const canClose = !saving;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -178,8 +173,8 @@ function Modal({
       toast.error("La descripcion debe tener al menos 10 caracteres");
       return;
     }
-    if (!/^[A-Za-z][A-Za-z0-9]*$/.test(icono)) {
-      toast.error("El icono debe ser un nombre valido de Lucide, por ejemplo Sparkles");
+    if (!isServiceIconName(icono)) {
+      toast.error("Elige un icono de la lista sugerida");
       return;
     }
 
@@ -199,7 +194,9 @@ function Modal({
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-end bg-background/70 p-3 backdrop-blur-sm sm:place-items-center sm:p-4"
-      onClick={() => !saving && onClose()}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && canClose) onClose();
+      }}
     >
       <form
         onSubmit={save}
@@ -212,9 +209,10 @@ function Modal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
-            disabled={saving}
+            onClick={() => canClose && onClose()}
+            disabled={!canClose}
             className="p-1 rounded-lg hover:bg-white/5"
+            aria-label="Cerrar formulario"
           >
             <X className="h-4 w-4" />
           </button>
@@ -230,7 +228,7 @@ function Modal({
           />
         </label>
         <label className="block">
-          <span className="text-xs text-muted-foreground">Descripcion</span>
+          <span className="text-xs text-muted-foreground">Descripción</span>
           <textarea
             value={form.descripcion}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
@@ -260,7 +258,9 @@ function Modal({
             <input
               type="number"
               value={form.orden}
-              onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
+              onChange={(e) =>
+                setForm({ ...form, orden: e.target.value === "" ? 0 : Number(e.target.value) })
+              }
               className={inputCls}
               min={0}
             />
@@ -278,13 +278,23 @@ function Modal({
             </button>
           ))}
         </div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon"
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />} Guardar
-        </button>
+        <div className="grid gap-2 sm:grid-cols-[auto_1fr]">
+          <button
+            type="button"
+            onClick={() => canClose && onClose()}
+            disabled={!canClose}
+            className="rounded-xl glass px-4 py-2.5 text-sm hover:border-neon disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon"
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />} Guardar servicio
+          </button>
+        </div>
       </form>
     </div>
   );

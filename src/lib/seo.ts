@@ -49,9 +49,9 @@ export const personSchema = {
   },
   knowsAbout: [
     "Desarrollo web",
-    "Aplicaciones moviles",
+    "Aplicaciones móviles",
     "Sistemas inteligentes",
-    "Diseno UI/UX",
+    "Diseño UI/UX",
     "Supabase",
     "React",
   ],

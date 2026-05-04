@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import novatecLogo from "@/assets/novatec-logo.png";
+import { AdminLoader } from "./AdminLoader";
 
 const items: {
   to: string;
@@ -48,8 +49,8 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (loading || !user || !isAdmin) {
     return (
-      <div className="min-h-screen grid place-items-center">
-        <div className="h-10 w-10 rounded-full border-2 border-neon border-t-transparent animate-spin" />
+      <div className="admin-shell-bg min-h-screen">
+        <AdminLoader label="Validando acceso..." />
       </div>
     );
   }
@@ -75,7 +76,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
           <button
             onClick={logout}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-white/5 hover:text-destructive lg:hidden"
-            aria-label="Cerrar sesion"
+            aria-label="Cerrar sesión"
           >
             <LogOut className="h-4 w-4" />
           </button>
@@ -128,7 +129,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-destructive hover:bg-white/5"
           >
             <LogOut className="h-4 w-4" />
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
       </aside>

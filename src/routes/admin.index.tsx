@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Activity, ArrowRight, FolderKanban, Loader2, Mail, Wrench } from "lucide-react";
+import { Activity, ArrowRight, FolderKanban, Loader2, Mail, Star, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { AdminGuard } from "@/components/admin/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,20 @@ export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Resumen · Admin" }, { name: "robots", content: "noindex" }] }),
   component: AdminHome,
 });
+
+type RecentProject = {
+  id: string;
+  nombre: string;
+  categoria: string;
+  destacado: boolean;
+};
+
+type RecentMessage = {
+  id: string;
+  nombre: string;
+  correo: string;
+  leido: boolean;
+};
 
 function AdminHome() {
   return (
@@ -20,24 +34,32 @@ function AdminHome() {
 
 function Dashboard() {
   const [counts, setCounts] = useState({ proyectos: 0, servicios: 0, mensajes: 0, sinLeer: 0 });
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    async function loadCounts() {
+    async function loadDashboard() {
       setLoading(true);
-      const [p, s, m, sl] = await Promise.all([
+      const [p, s, m, sl, rp, rm] = await Promise.all([
         supabase.from("proyectos").select("id", { count: "exact", head: true }),
         supabase.from("servicios").select("id", { count: "exact", head: true }),
         supabase.from("mensajes").select("id", { count: "exact", head: true }),
         supabase.from("mensajes").select("id", { count: "exact", head: true }).eq("leido", false),
+        supabase.from("proyectos").select("id,nombre,categoria,destacado").order("orden").limit(5),
+        supabase
+          .from("mensajes")
+          .select("id,nombre,correo,leido")
+          .order("creado_en", { ascending: false })
+          .limit(5),
       ]);
 
       if (!active) return;
       setLoading(false);
 
-      const firstError = p.error ?? s.error ?? m.error ?? sl.error;
+      const firstError = p.error ?? s.error ?? m.error ?? sl.error ?? rp.error ?? rm.error;
       if (firstError) {
         toast.error(firstError.message);
         return;
@@ -49,9 +71,11 @@ function Dashboard() {
         mensajes: m.count ?? 0,
         sinLeer: sl.count ?? 0,
       });
+      setRecentProjects((rp.data as RecentProject[]) ?? []);
+      setRecentMessages((rm.data as RecentMessage[]) ?? []);
     }
 
-    void loadCounts();
+    void loadDashboard();
     return () => {
       active = false;
     };
@@ -115,6 +139,84 @@ function Dashboard() {
             </div>
           </Link>
         ))}
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <section className="surface-panel rounded-2xl p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Portafolio</p>
+              <h2 className="font-display text-lg font-semibold">Proyectos visibles</h2>
+            </div>
+            <Link to="/admin/proyectos" className="text-xs text-neon hover:underline">
+              Gestionar
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-12 rounded-xl bg-muted shimmer" />
+              ))
+            ) : recentProjects.length > 0 ? (
+              recentProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  to="/admin/proyectos"
+                  className="flex items-center justify-between gap-3 rounded-xl glass px-3 py-2.5 text-sm hover:border-neon"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{project.nombre}</span>
+                    <span className="text-xs text-muted-foreground">{project.categoria}</span>
+                  </span>
+                  {project.destacado && <Star className="h-4 w-4 shrink-0 fill-neon text-neon" />}
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl glass p-4 text-sm text-muted-foreground">
+                Todavía no hay proyectos publicados.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="surface-panel rounded-2xl p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Bandeja</p>
+              <h2 className="font-display text-lg font-semibold">Mensajes recientes</h2>
+            </div>
+            <Link to="/admin/mensajes" className="text-xs text-neon hover:underline">
+              Revisar
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-12 rounded-xl bg-muted shimmer" />
+              ))
+            ) : recentMessages.length > 0 ? (
+              recentMessages.map((message) => (
+                <Link
+                  key={message.id}
+                  to="/admin/mensajes"
+                  className="flex items-center justify-between gap-3 rounded-xl glass px-3 py-2.5 text-sm hover:border-neon"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{message.nombre}</span>
+                    <span className="text-xs text-muted-foreground">{message.correo}</span>
+                  </span>
+                  {!message.leido && (
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-neon shadow-neon" />
+                  )}
+                </Link>
+              ))
+            ) : (
+              <p className="rounded-xl glass p-4 text-sm text-muted-foreground">
+                Todavía no hay mensajes recibidos.
+              </p>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

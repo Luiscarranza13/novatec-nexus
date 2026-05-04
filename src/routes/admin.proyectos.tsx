@@ -1,8 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, X, Loader2, Upload, Star } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Loader2,
+  Upload,
+  Star,
+  RefreshCw,
+  Search,
+  ExternalLink,
+} from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { AdminLoader } from "@/components/admin/AdminLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/proyectos")({
@@ -53,6 +65,27 @@ function ProyectosAdmin() {
   const [editing, setEditing] = useState<Proyecto | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"todos" | "destacados" | "sin-imagen">("todos");
+
+  const filteredItems = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return items.filter((project) => {
+      const matchesTerm =
+        !term ||
+        [project.nombre, project.descripcion, project.categoria]
+          .join(" ")
+          .toLowerCase()
+          .includes(term);
+      const matchesFilter =
+        filter === "todos" ||
+        (filter === "destacados" && project.destacado) ||
+        (filter === "sin-imagen" && !project.imagen_url);
+      return matchesTerm && matchesFilter;
+    });
+  }, [items, query, filter]);
+
+  const featuredCount = useMemo(() => items.filter((project) => project.destacado).length, [items]);
 
   async function load() {
     setLoading(true);
@@ -85,28 +118,69 @@ function ProyectosAdmin() {
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Portafolio</p>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Proyectos</h1>
-            <p className="text-muted-foreground">Gestiona el portafolio publico de la web.</p>
+            <p className="text-muted-foreground">
+              {items.length} proyectos, {featuredCount} destacados.
+            </p>
           </div>
-          <button
-            onClick={() => setCreating(true)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-neon to-violet px-4 py-2.5 font-medium text-background shadow-neon sm:w-auto"
-          >
-            <Plus className="h-4 w-4" /> Nuevo
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => load()}
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl glass px-4 py-2.5 hover:border-neon disabled:opacity-60 sm:w-auto"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              Actualizar
+            </button>
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-neon to-violet px-4 py-2.5 font-medium text-background shadow-neon sm:w-auto"
+            >
+              <Plus className="h-4 w-4" /> Nuevo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+        <label className="glass flex items-center gap-2 rounded-2xl px-3 py-2.5">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder="Buscar por nombre, categoria o descripcion"
+          />
+        </label>
+        <div className="grid grid-cols-3 gap-2 rounded-2xl glass p-1">
+          {[
+            ["todos", "Todos"],
+            ["destacados", "Destacados"],
+            ["sin-imagen", "Sin imagen"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFilter(value as typeof filter)}
+              className={`rounded-xl px-3 py-2 text-xs transition-colors ${
+                filter === value ? "bg-foreground text-background" : "text-muted-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
       {loading ? (
-        <div className="grid place-items-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-neon" />
-        </div>
-      ) : items.length === 0 ? (
+        <AdminLoader label="Cargando proyectos..." />
+      ) : filteredItems.length === 0 ? (
         <div className="surface-panel rounded-2xl p-10 text-center text-muted-foreground">
-          Aun no hay proyectos.
+          No hay proyectos para esta búsqueda.
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-          {items.map((p) => (
+          {filteredItems.map((p) => (
             <article key={p.id} className="surface-panel overflow-hidden rounded-2xl">
               <div className="aspect-[16/10] bg-gradient-to-br from-violet/30 to-neon/20">
                 {p.imagen_url ? (
@@ -129,10 +203,24 @@ function ProyectosAdmin() {
                 </div>
                 <h3 className="font-semibold mt-1">{p.nombre}</h3>
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.descripcion}</p>
-                <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+                <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-2">
+                  {p.link ? (
+                    <a
+                      href={p.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1 rounded-lg glass px-3 py-2 text-xs hover:border-neon"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Ver
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center justify-center rounded-lg glass px-3 py-2 text-xs text-muted-foreground">
+                      Sin link
+                    </span>
+                  )}
                   <button
                     onClick={() => setEditing(p)}
-                    className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg glass hover:border-neon"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg glass hover:border-neon"
                   >
                     <Pencil className="h-3 w-3" /> Editar
                   </button>
@@ -189,6 +277,7 @@ function ProyectoModal({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const canClose = !saving && !uploading;
 
   async function uploadImage(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -196,26 +285,29 @@ function ProyectoModal({
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Maximo 5MB");
+      toast.error("Máximo 5MB");
       return;
     }
-    setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `proyectos/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("portafolio")
-      .upload(path, file, { upsert: false, contentType: file.type });
-    if (error) {
+    try {
+      setUploading(true);
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `proyectos/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("portafolio")
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("portafolio").getPublicUrl(path);
+      setForm((f) => ({ ...f, imagen_url: publicUrl }));
+      toast.success("Imagen subida");
+    } finally {
       setUploading(false);
-      toast.error(error.message);
-      return;
+      if (fileRef.current) fileRef.current.value = "";
     }
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("portafolio").getPublicUrl(path);
-    setForm((f) => ({ ...f, imagen_url: publicUrl }));
-    setUploading(false);
-    toast.success("Imagen subida");
   }
 
   async function save(e: React.FormEvent) {
@@ -273,7 +365,9 @@ function ProyectoModal({
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-end bg-background/70 p-3 backdrop-blur-sm sm:place-items-center sm:p-4"
-      onClick={() => !saving && onClose()}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && canClose) onClose();
+      }}
     >
       <form
         onSubmit={save}
@@ -286,9 +380,10 @@ function ProyectoModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
-            disabled={saving}
+            onClick={() => canClose && onClose()}
+            disabled={!canClose}
             className="p-1 rounded-lg hover:bg-white/5"
+            aria-label="Cerrar formulario"
           >
             <X className="h-4 w-4" />
           </button>
@@ -303,7 +398,7 @@ function ProyectoModal({
             required
           />
         </Field>
-        <Field label="Descripcion" help="Minimo 10 caracteres.">
+        <Field label="Descripción" help="Mínimo 10 caracteres.">
           <textarea
             value={form.descripcion}
             onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
@@ -364,7 +459,9 @@ function ProyectoModal({
             <input
               type="number"
               value={form.orden}
-              onChange={(e) => setForm({ ...form, orden: Number(e.target.value) })}
+              onChange={(e) =>
+                setForm({ ...form, orden: e.target.value === "" ? 0 : Number(e.target.value) })
+              }
               className={inputCls}
               min={0}
             />
@@ -390,14 +487,24 @@ function ProyectoModal({
           Destacado
         </label>
 
-        <button
-          type="submit"
-          disabled={saving || uploading}
-          className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon"
-        >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          Guardar
-        </button>
+        <div className="grid gap-2 sm:grid-cols-[auto_1fr]">
+          <button
+            type="button"
+            onClick={() => canClose && onClose()}
+            disabled={!canClose}
+            className="rounded-xl glass px-4 py-2.5 text-sm hover:border-neon disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving || uploading}
+            className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon to-violet text-background font-medium disabled:opacity-60 inline-flex items-center justify-center gap-2 glow-neon"
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            Guardar proyecto
+          </button>
+        </div>
       </form>
     </div>
   );

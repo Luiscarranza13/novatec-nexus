@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { supabase } from "@/integrations/supabase/client";
 import avatarLuis from "@/assets/avatar-luis.jpg";
@@ -7,19 +8,7 @@ import { SITE } from "@/lib/site";
 import { seo } from "@/lib/seo";
 import { ADMIN_PROFILE_FILTER, pickPublicProfile } from "@/lib/profile";
 import { useGsapPage } from "@/hooks/useGsapAnimations";
-
-const TECH = [
-  "Next.js",
-  "TanStack Start",
-  "React",
-  "Vue",
-  "Supabase",
-  "PHP",
-  "MySQL",
-  "Node.js",
-  "TypeScript",
-  "Tailwind",
-];
+import { TECH_STACK } from "@/lib/tech-icons";
 
 export const Route = createFileRoute("/sobre-mi")({
   head: () =>
@@ -70,7 +59,7 @@ function SobreMi() {
             />
           </div>
           <div data-gsap-hero>
-            <p className="text-sm uppercase tracking-widest text-neon">Sobre mi</p>
+            <p className="text-sm uppercase tracking-widest text-neon">Sobre mí</p>
             <h1 className="text-4xl md:text-5xl font-bold mt-2">
               {(p?.nombre ?? "Luis Armando Carranza Cortez").split(" ").map((word, index) => (
                 <span key={`${word}-${index}`} data-gsap-word className="mr-2 inline-block">
@@ -80,24 +69,33 @@ function SobreMi() {
             </h1>
             <p className="text-muted-foreground mt-2">{SITE.rol}</p>
             <p data-gsap-reveal className="mt-6 text-foreground/90 leading-relaxed">
-              {p?.bio}
+              {p?.bio ||
+                "Desarrollo productos web modernos, rápidos y administrables para negocios que necesitan una presencia digital sólida y sistemas que puedan crecer."}
             </p>
 
             <h2 data-gsap-reveal className="mt-10 font-display font-semibold text-lg">
-              Tecnologias
+              Tecnologías
             </h2>
             <div data-gsap-stagger className="flex flex-wrap gap-2 mt-3">
-              {TECH.map((t) => (
+              {TECH_STACK.map((tech) => (
                 <span
-                  key={t}
+                  key={tech.name}
                   data-gsap-card
                   data-gsap-hover
-                  className="px-3 py-1.5 rounded-full glass text-xs hover:text-neon hover:border-neon transition-colors"
+                  className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs transition-all hover:-translate-y-0.5 hover:border-neon hover:text-neon"
                 >
-                  {t}
+                  <tech.icon className="h-3.5 w-3.5" />
+                  {tech.name}
                 </span>
               ))}
             </div>
+            <Link
+              to="/contacto"
+              data-gsap-button
+              className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-neon to-violet px-5 py-3 font-medium text-background shadow-neon"
+            >
+              Trabajemos juntos <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
       </div>

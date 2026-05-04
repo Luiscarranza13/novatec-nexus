@@ -27,29 +27,35 @@ export function useAuth() {
   useEffect(() => {
     let active = true;
 
-    async function applySession(s: Session | null) {
-      setSession(s);
-      setUser(s?.user ?? null);
+    async function applySession(s: Session | null, isInitialLoad = false) {
+      if (isInitialLoad) setLoading(true);
 
-      if (s?.user) {
-        const admin = await checkIsAdmin(s.user.id);
-        if (active) setIsAdmin(admin);
-      } else {
+      if (!s?.user) {
+        if (!active) return;
+        setSession(null);
+        setUser(null);
         setIsAdmin(false);
+        setLoading(false);
+        return;
       }
 
-      if (active) setLoading(false);
+      const admin = await checkIsAdmin(s.user.id);
+
+      if (!active) return;
+      setSession(s);
+      setUser(s.user);
+      setIsAdmin(admin);
+      setLoading(false);
     }
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
-      setLoading(true);
       void applySession(s);
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      void applySession(s);
+      void applySession(s, true);
     });
 
     return () => {

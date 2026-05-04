@@ -16,7 +16,7 @@ import appCss from "../styles.css?url";
 const rootSeo = seo({
   title: "Luis Carranza | Desarrollador Full Stack y CEO de Novatec",
   description:
-    "Portafolio de Luis Armando Carranza Cortez. Desarrollo web, sistemas inteligentes, apps moviles y diseno UI/UX para negocios modernos.",
+    "Portafolio de Luis Armando Carranza Cortez. Desarrollo web, sistemas inteligentes, apps móviles y diseño UI/UX para negocios modernos.",
 });
 
 function NotFoundComponent() {
@@ -24,9 +24,9 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Pagina no encontrada</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página no encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          La pagina que buscas no existe o fue movida.
+          La página que buscas no existe o fue movida.
         </p>
         <div className="mt-6">
           <Link

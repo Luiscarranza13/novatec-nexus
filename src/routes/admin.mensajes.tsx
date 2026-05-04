@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Loader2, Mail, MailOpen, Inbox, RefreshCw } from "lucide-react";
+import { Inbox, Loader2, Mail, MailOpen, RefreshCw, Search, Trash2 } from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { AdminLoader } from "@/components/admin/AdminLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/mensajes")({
@@ -27,7 +28,23 @@ function Mensajes() {
   const [items, setItems] = useState<Mensaje[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"todos" | "sin-leer" | "leidos">("todos");
+
   const unread = useMemo(() => items.filter((m) => !m.leido).length, [items]);
+  const visibleItems = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return items.filter((message) => {
+      const matchesTerm =
+        !term ||
+        [message.nombre, message.correo, message.mensaje].join(" ").toLowerCase().includes(term);
+      const matchesFilter =
+        filter === "todos" ||
+        (filter === "sin-leer" && !message.leido) ||
+        (filter === "leidos" && message.leido);
+      return matchesTerm && matchesFilter;
+    });
+  }, [filter, items, query]);
 
   async function load() {
     setLoading(true);
@@ -54,7 +71,7 @@ function Mensajes() {
       setItems((current) =>
         current.map((item) => (item.id === m.id ? { ...item, leido: next } : item)),
       );
-      toast.success(next ? "Marcado como leido" : "Marcado como no leido");
+      toast.success(next ? "Marcado como leído" : "Marcado como no leído");
     }
   }
 
@@ -93,18 +110,46 @@ function Mensajes() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="grid place-items-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-neon" />
+      <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+        <label className="glass flex items-center gap-2 rounded-2xl px-3 py-2.5">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder="Buscar por nombre, correo o mensaje"
+          />
+        </label>
+        <div className="grid grid-cols-3 gap-2 rounded-2xl glass p-1">
+          {[
+            ["todos", "Todos"],
+            ["sin-leer", "Sin leer"],
+            ["leidos", "Leídos"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFilter(value as typeof filter)}
+              className={`rounded-xl px-3 py-2 text-xs transition-colors ${
+                filter === value ? "bg-foreground text-background" : "text-muted-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-      ) : items.length === 0 ? (
+      </div>
+
+      {loading ? (
+        <AdminLoader label="Cargando mensajes..." />
+      ) : visibleItems.length === 0 ? (
         <div className="surface-panel mt-6 flex flex-col items-center gap-3 rounded-2xl p-10 text-center text-muted-foreground">
           <Inbox className="h-10 w-10 text-neon/60" />
-          Aun no has recibido mensajes.
+          No hay mensajes para esta vista.
         </div>
       ) : (
         <div className="space-y-3 mt-6">
-          {items.map((m) => (
+          {visibleItems.map((m) => (
             <article
               key={m.id}
               className={`surface-panel rounded-2xl p-4 sm:p-5 ${!m.leido ? "border-neon/40" : ""}`}
@@ -130,7 +175,7 @@ function Mensajes() {
                     onClick={() => toggleLeido(m)}
                     disabled={busyId === m.id}
                     className="inline-flex items-center justify-center rounded-lg glass p-2 hover:border-neon disabled:opacity-60"
-                    title={m.leido ? "Marcar como no leido" : "Marcar como leido"}
+                    title={m.leido ? "Marcar como no leído" : "Marcar como leído"}
                   >
                     {busyId === m.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

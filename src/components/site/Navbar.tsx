@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
@@ -19,6 +19,10 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { location } = useRouterState();
   useGsapNavbar(headerRef);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   return (
     <header ref={headerRef} className="fixed top-0 inset-x-0 z-50 will-change-transform">
@@ -85,13 +89,18 @@ export function Navbar() {
         </nav>
 
         {open && (
-          <div className="md:hidden mt-2 glass rounded-2xl p-2">
+          <div className="md:hidden mt-2 glass rounded-2xl p-2 shadow-elevated">
             {links.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
                 onClick={() => setOpen(false)}
-                className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5"
+                className={cn(
+                  "block px-3 py-3 text-sm rounded-xl transition-colors",
+                  location.pathname === l.to
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                )}
               >
                 {l.label}
               </Link>
@@ -99,7 +108,7 @@ export function Navbar() {
             <Link
               to="/admin"
               onClick={() => setOpen(false)}
-              className="block px-3 py-2 text-sm rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5"
+              className="mt-1 block rounded-xl border border-glass-border px-3 py-3 text-sm text-muted-foreground hover:text-foreground"
             >
               Admin
             </Link>

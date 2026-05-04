@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Save, Upload } from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
+import { AdminLoader } from "@/components/admin/AdminLoader";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -93,27 +94,30 @@ function Perfil() {
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Maximo 5MB");
+      toast.error("Máximo 5MB");
       return;
     }
-    setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const version = Date.now();
-    const path = `avatars/${user.id}.${ext}`;
-    const { error } = await supabase.storage
-      .from("portafolio")
-      .upload(path, file, { contentType: file.type, upsert: true });
-    if (error) {
+    try {
+      setUploading(true);
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const version = Date.now();
+      const path = `avatars/${user.id}.${ext}`;
+      const { error } = await supabase.storage
+        .from("portafolio")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("portafolio").getPublicUrl(path);
+      setForm((f) => (f ? { ...f, avatar_url: `${publicUrl}?v=${version}` } : f));
+      toast.success("Avatar actualizado");
+    } finally {
       setUploading(false);
-      toast.error(error.message);
-      return;
+      if (fileRef.current) fileRef.current.value = "";
     }
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("portafolio").getPublicUrl(path);
-    setForm((f) => (f ? { ...f, avatar_url: `${publicUrl}?v=${version}` } : f));
-    setUploading(false);
-    toast.success("Avatar actualizado");
   }
 
   async function save(e: React.FormEvent) {
@@ -133,7 +137,7 @@ function Perfil() {
       return;
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("El email publico no es valido");
+      toast.error("El email público no es válido");
       return;
     }
     if ([avatar, instagram, facebook, linkedin, github].some((value) => value === null)) {
@@ -162,11 +166,7 @@ function Perfil() {
   }
 
   if (loading || !form) {
-    return (
-      <div className="grid place-items-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-neon" />
-      </div>
-    );
+    return <AdminLoader label="Cargando perfil..." />;
   }
 
   return (
@@ -175,7 +175,7 @@ function Perfil() {
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Identidad publica</p>
         <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Perfil</h1>
         <p className="text-muted-foreground">
-          Estos datos controlan la informacion publica, avatar, contacto y redes de la web.
+          Estos datos controlan la información pública, avatar, contacto y redes de la web.
         </p>
       </div>
 
@@ -213,7 +213,7 @@ function Perfil() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nombre publico">
+          <Field label="Nombre público">
             <Inp
               v={form.nombre}
               on={(v) => setForm({ ...form, nombre: v })}
@@ -250,7 +250,7 @@ function Perfil() {
               maxLength={30}
             />
           </Field>
-          <Field label="Email publico">
+          <Field label="Email público">
             <Inp
               type="email"
               v={form.email_publico ?? ""}

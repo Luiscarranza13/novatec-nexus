@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, Star } from "lucide-react";
+import { ExternalLink, Search, Star } from "lucide-react";
+import { toast } from "sonner";
 import { PublicLayout } from "@/components/site/PublicLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/proyectos")({
     seo({
       title: "Proyectos de desarrollo web y software | Luis Carranza",
       description:
-        "Portafolio de proyectos destacados de Luis Carranza y Novatec en desarrollo web, software, automatizacion y experiencias digitales.",
+        "Portafolio de proyectos destacados de Luis Carranza y Novatec en desarrollo web, software, automatización y experiencias digitales.",
       path: "/proyectos",
     }),
   component: Proyectos,
@@ -32,14 +33,29 @@ function Proyectos() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<Proyecto[]>([]);
   const [filtro, setFiltro] = useState<string>("Todos");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
   useGsapPage(pageRef);
 
   useEffect(() => {
+    let active = true;
     supabase
       .from("proyectos")
       .select("*")
       .order("orden")
-      .then(({ data }) => setItems((data as Proyecto[]) ?? []));
+      .then(({ data, error }) => {
+        if (!active) return;
+        setLoading(false);
+        if (error) {
+          toast.error("No se pudieron cargar los proyectos");
+          return;
+        }
+        setItems((data as Proyecto[]) ?? []);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const categorias = useMemo(
@@ -47,7 +63,14 @@ function Proyectos() {
     [items],
   );
 
-  const visible = filtro === "Todos" ? items : items.filter((p) => p.categoria === filtro);
+  const visible = useMemo(() => {
+    const byCategory = filtro === "Todos" ? items : items.filter((p) => p.categoria === filtro);
+    const term = query.trim().toLowerCase();
+    if (!term) return byCategory;
+    return byCategory.filter((p) =>
+      [p.nombre, p.descripcion, p.categoria].join(" ").toLowerCase().includes(term),
+    );
+  }, [filtro, items, query]);
 
   return (
     <PublicLayout>
@@ -63,7 +86,23 @@ function Proyectos() {
                 recientes
               </span>
             </h1>
+            <p className="mt-3 text-muted-foreground">
+              Explora proyectos por categoría, tecnología o necesidad de negocio.
+            </p>
           </div>
+
+          <label
+            data-gsap-reveal
+            className="glass mx-auto mb-5 flex max-w-xl items-center gap-2 rounded-2xl px-4 py-3"
+          >
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              placeholder="Buscar proyectos"
+            />
+          </label>
 
           <div data-gsap-reveal className="mb-8 flex flex-wrap justify-center gap-2">
             {categorias.map((c) => (
@@ -83,8 +122,24 @@ function Proyectos() {
             ))}
           </div>
 
-          {visible.length === 0 ? (
-            <p className="text-center text-muted-foreground py-20">No hay proyectos aun.</p>
+          {loading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="surface-panel overflow-hidden rounded-2xl">
+                  <div className="aspect-[16/10] bg-muted shimmer" />
+                  <div className="p-5">
+                    <div className="h-3 w-20 rounded bg-muted shimmer" />
+                    <div className="mt-3 h-5 w-2/3 rounded bg-muted shimmer" />
+                    <div className="mt-3 h-3 w-full rounded bg-muted shimmer" />
+                    <div className="mt-2 h-3 w-4/5 rounded bg-muted shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : visible.length === 0 ? (
+            <p className="text-center text-muted-foreground py-20">
+              No hay proyectos para esta búsqueda.
+            </p>
           ) : (
             <div data-gsap-stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
               {visible.map((p) => (

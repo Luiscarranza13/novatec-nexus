@@ -23,16 +23,16 @@ export const Route = createFileRoute("/contacto")({
     seo({
       title: "Contacto | Luis Carranza y Novatec",
       description:
-        "Contacta a Luis Carranza para desarrollo web, sistemas inteligentes, apps moviles y diseno UI/UX. Respuesta rapida por formulario o WhatsApp.",
+        "Contacta a Luis Carranza para desarrollo web, sistemas inteligentes, apps móviles y diseño UI/UX. Respuesta rápida por formulario o WhatsApp.",
       path: "/contacto",
     }),
   component: Contacto,
 });
 
 const schema = z.object({
-  nombre: z.string().trim().min(2, "Minimo 2 caracteres").max(100),
-  correo: z.string().trim().email("Correo invalido").max(255),
-  mensaje: z.string().trim().min(5, "Minimo 5 caracteres").max(2000),
+  nombre: z.string().trim().min(2, "Mínimo 2 caracteres").max(100),
+  correo: z.string().trim().email("Correo inválido").max(255),
+  mensaje: z.string().trim().min(5, "Mínimo 5 caracteres").max(2000),
 });
 
 type Perfil = {
@@ -48,23 +48,42 @@ type Perfil = {
 
 function Contacto() {
   const pageRef = useRef<HTMLDivElement>(null);
-  const [form, setForm] = useState({ nombre: "", correo: "", mensaje: "" });
+  const formStartedAt = useRef(Date.now());
+  const [form, setForm] = useState({ nombre: "", correo: "", mensaje: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   useGsapPage(pageRef);
 
   useEffect(() => {
+    let active = true;
     supabase
       .from("perfiles")
       .select("nombre,avatar_url,whatsapp,email_publico,instagram,facebook,linkedin,github")
       .eq(ADMIN_PROFILE_FILTER.column, ADMIN_PROFILE_FILTER.value)
       .order("actualizado_en", { ascending: false })
       .limit(10)
-      .then(({ data }) => setPerfil(pickPublicProfile(data as Perfil[] | null)));
+      .then(({ data }) => {
+        if (!active) return;
+        setPerfil(pickPublicProfile(data as Perfil[] | null));
+        setProfileLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (form.website.trim() || Date.now() - formStartedAt.current < 1200) {
+      toast.success("Mensaje enviado. Te responderé pronto.");
+      setForm({ nombre: "", correo: "", mensaje: "", website: "" });
+      formStartedAt.current = Date.now();
+      return;
+    }
+
     const result = schema.safeParse(form);
     if (!result.success) {
       toast.error(result.error.issues[0].message);
@@ -77,8 +96,9 @@ function Contacto() {
       toast.error("No se pudo enviar el mensaje. Intenta de nuevo.");
       return;
     }
-    toast.success("Mensaje enviado. Te respondere pronto.");
-    setForm({ nombre: "", correo: "", mensaje: "" });
+    toast.success("Mensaje enviado. Te responderé pronto.");
+    setForm({ nombre: "", correo: "", mensaje: "", website: "" });
+    formStartedAt.current = Date.now();
   }
 
   const wa = perfil?.whatsapp ? `https://wa.me/${perfil.whatsapp.replace(/\D/g, "")}` : null;
@@ -98,14 +118,26 @@ function Contacto() {
             <p className="text-sm uppercase tracking-widest text-neon">Hablemos</p>
             <h1 className="text-4xl md:text-5xl font-bold mt-2">
               <span data-gsap-word className="inline-block text-gradient">
-                Contactame
+                Contáctame
               </span>
             </h1>
             <p className="text-muted-foreground mt-3 max-w-md">
-              Cuentame sobre tu proyecto. Te respondo en menos de 24 horas.
+              Cuéntame sobre tu proyecto. Te respondo en menos de 24 horas.
             </p>
 
             <div data-gsap-stagger className="mt-8 space-y-3">
+              {profileLoading && (
+                <>
+                  <div className="glass rounded-xl p-4">
+                    <div className="h-4 w-28 rounded bg-muted shimmer" />
+                    <div className="mt-2 h-3 w-40 rounded bg-muted shimmer" />
+                  </div>
+                  <div className="glass rounded-xl p-4">
+                    <div className="h-4 w-24 rounded bg-muted shimmer" />
+                    <div className="mt-2 h-3 w-48 rounded bg-muted shimmer" />
+                  </div>
+                </>
+              )}
               {wa && (
                 <a
                   href={wa}
@@ -162,6 +194,15 @@ function Contacto() {
             data-gsap-hero-visual
             className="glass rounded-3xl p-6 space-y-4"
           >
+            <input
+              type="text"
+              value={form.website}
+              onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+              className="hidden"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
             <div>
               <label className="text-sm text-muted-foreground">Nombre</label>
               <input
@@ -170,6 +211,7 @@ function Contacto() {
                 className="mt-1 w-full px-4 py-3 rounded-xl bg-input border border-glass-border focus:border-neon focus:outline-none transition-colors"
                 placeholder="Tu nombre"
                 maxLength={100}
+                required
               />
             </div>
             <div>
@@ -181,6 +223,7 @@ function Contacto() {
                 className="mt-1 w-full px-4 py-3 rounded-xl bg-input border border-glass-border focus:border-neon focus:outline-none transition-colors"
                 placeholder="tu@correo.com"
                 maxLength={255}
+                required
               />
             </div>
             <div>
@@ -190,9 +233,13 @@ function Contacto() {
                 onChange={(e) => setForm((f) => ({ ...f, mensaje: e.target.value }))}
                 rows={5}
                 className="mt-1 w-full px-4 py-3 rounded-xl bg-input border border-glass-border focus:border-neon focus:outline-none transition-colors resize-none"
-                placeholder="Cuentame sobre tu proyecto..."
+                placeholder="Cuéntame sobre tu proyecto..."
                 maxLength={2000}
+                required
               />
+              <p className="mt-1 text-right text-xs text-muted-foreground">
+                {form.mensaje.length}/2000
+              </p>
             </div>
             <button
               type="submit"

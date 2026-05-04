@@ -69,20 +69,24 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="text-sm text-muted-foreground">Siguenos</p>
+          <p className="text-sm text-muted-foreground">Síguenos</p>
           <div className="flex gap-2 mt-2">
-            {socials.map((s) => (
-              <a
-                key={s.label}
-                href={s.url!}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={s.label}
-                className="h-10 w-10 rounded-xl glass flex items-center justify-center hover:text-neon hover:glow-neon transition-all"
-              >
-                <s.icon className="h-4 w-4" />
-              </a>
-            ))}
+            {socials.length > 0 ? (
+              socials.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.url!}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={s.label}
+                  className="h-10 w-10 rounded-xl glass flex items-center justify-center hover:text-neon hover:glow-neon transition-all"
+                >
+                  <s.icon className="h-4 w-4" />
+                </a>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">Configurable desde admin</span>
+            )}
           </div>
         </div>
       </div>

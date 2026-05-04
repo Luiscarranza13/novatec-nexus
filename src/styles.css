@@ -248,6 +248,9 @@
     background-clip: text;
     color: transparent;
   }
+  .text-balance {
+    text-wrap: balance;
+  }
   .glow-neon {
     box-shadow: var(--shadow-neon);
   }
@@ -397,6 +400,70 @@
   );
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
+}
+
+@keyframes admin-loader-orbit {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes admin-loader-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes admin-loader-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes admin-loader-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(45%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.admin-loader-orbit {
+  animation: admin-loader-orbit 2.2s linear infinite;
+}
+
+.admin-loader-pulse {
+  animation: admin-loader-pulse 1.8s ease-in-out infinite;
+}
+
+.admin-loader-dot {
+  animation: admin-loader-dot 900ms ease-in-out infinite;
+}
+
+.admin-loader-bar {
+  animation: admin-loader-bar 1.45s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
