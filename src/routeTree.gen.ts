@@ -20,6 +20,8 @@ import { Route as AdminProyectosRouteImport } from './routes/admin.proyectos'
 import { Route as AdminPerfilRouteImport } from './routes/admin.perfil'
 import { Route as AdminMensajesRouteImport } from './routes/admin.mensajes'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminBiometricIndexRouteImport } from './routes/admin/biometric/index'
+import { Route as AdminBiometricChar43typesRouteImport } from './routes/admin/biometric/+types'
 
 const SobreMiRoute = SobreMiRouteImport.update({
   id: '/sobre-mi',
@@ -76,6 +78,17 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminBiometricIndexRoute = AdminBiometricIndexRouteImport.update({
+  id: '/admin/biometric/',
+  path: '/admin/biometric/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBiometricChar43typesRoute =
+  AdminBiometricChar43typesRouteImport.update({
+    id: '/admin/biometric/+types',
+    path: '/admin/biometric/+types',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +102,8 @@ export interface FileRoutesByFullPath {
   '/admin/proyectos': typeof AdminProyectosRoute
   '/admin/servicios': typeof AdminServiciosRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/biometric/+types': typeof AdminBiometricChar43typesRoute
+  '/admin/biometric/': typeof AdminBiometricIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +117,8 @@ export interface FileRoutesByTo {
   '/admin/proyectos': typeof AdminProyectosRoute
   '/admin/servicios': typeof AdminServiciosRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/biometric/+types': typeof AdminBiometricChar43typesRoute
+  '/admin/biometric': typeof AdminBiometricIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +133,8 @@ export interface FileRoutesById {
   '/admin/proyectos': typeof AdminProyectosRoute
   '/admin/servicios': typeof AdminServiciosRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/biometric/+types': typeof AdminBiometricChar43typesRoute
+  '/admin/biometric/': typeof AdminBiometricIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +150,8 @@ export interface FileRouteTypes {
     | '/admin/proyectos'
     | '/admin/servicios'
     | '/admin/'
+    | '/admin/biometric/+types'
+    | '/admin/biometric/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +165,8 @@ export interface FileRouteTypes {
     | '/admin/proyectos'
     | '/admin/servicios'
     | '/admin'
+    | '/admin/biometric/+types'
+    | '/admin/biometric'
   id:
     | '__root__'
     | '/'
@@ -157,6 +180,8 @@ export interface FileRouteTypes {
     | '/admin/proyectos'
     | '/admin/servicios'
     | '/admin/'
+    | '/admin/biometric/+types'
+    | '/admin/biometric/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +196,8 @@ export interface RootRouteChildren {
   AdminProyectosRoute: typeof AdminProyectosRoute
   AdminServiciosRoute: typeof AdminServiciosRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminBiometricChar43typesRoute: typeof AdminBiometricChar43typesRoute
+  AdminBiometricIndexRoute: typeof AdminBiometricIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +279,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/biometric/': {
+      id: '/admin/biometric/'
+      path: '/admin/biometric'
+      fullPath: '/admin/biometric/'
+      preLoaderRoute: typeof AdminBiometricIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/biometric/+types': {
+      id: '/admin/biometric/+types'
+      path: '/admin/biometric/+types'
+      fullPath: '/admin/biometric/+types'
+      preLoaderRoute: typeof AdminBiometricChar43typesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +308,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminProyectosRoute: AdminProyectosRoute,
   AdminServiciosRoute: AdminServiciosRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminBiometricChar43typesRoute: AdminBiometricChar43typesRoute,
+  AdminBiometricIndexRoute: AdminBiometricIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
